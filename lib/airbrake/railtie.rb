@@ -11,6 +11,7 @@ module Airbrake
     initializer "airbrake.use_rack_middleware" do |app|
       app.config.middleware.insert 0, "Airbrake::UserInformer"
       app.config.middleware.insert_after "Airbrake::UserInformer","Airbrake::Rack"
+      app.config.middleware.use "Airbrake::Metrics"
     end
 
     config.after_initialize do
@@ -42,6 +43,30 @@ module Airbrake
         #
         require 'airbrake/rails/middleware/exceptions_catcher'
         ::ActionDispatch::ShowExceptions.send(:include,Airbrake::Rails::Middleware::ExceptionsCatcher)
+      end
+
+      ActiveSupport::Notifications.subscribe "process_action.action_controller" do |name, start, finish, id, payload|
+
+        time = (finish - start) * 1000000 #in micro seconds
+
+        Airbrake::Metrics.tap do |m|
+
+          m.duration_of_requests += time
+          m.request_counter += 1
+          m.avg = 0 if m.avg.nil?
+          m.avg = m.duration_of_requests / m.request_counter
+
+          m.min_response_time ||= time
+          m.max_response_time ||= time
+
+          if time < m.min_response_time
+            m.min_response_time = time
+          end
+
+          if time > m.max_response_time
+            m.max_response_time = time
+          end
+        end
       end
     end
   end

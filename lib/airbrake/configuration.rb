@@ -107,6 +107,8 @@ module Airbrake
     # User attributes that are being captured
     attr_accessor :user_attributes
 
+    # Exceptions that are being captured
+    attr_accessor :exceptions 
 
     DEFAULT_PARAMS_FILTERS = %w(password password_confirmation).freeze
 
@@ -163,6 +165,7 @@ module Airbrake
       @rescue_rake_exceptions   = nil
       @user_attributes          = DEFAULT_USER_ATTRIBUTES.dup
       @rake_environment_filters = []
+      @exceptions               = []
     end
 
     # Takes a block and adds it to the list of backtrace filters. When the filters

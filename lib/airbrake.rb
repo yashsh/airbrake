@@ -16,7 +16,10 @@ require 'airbrake/rack'
 require 'airbrake/sinatra'
 require 'airbrake/user_informer'
 
-require 'airbrake/railtie' if defined?(Rails::Railtie)
+if defined?(Rails::Railtie)
+  require 'airbrake/railtie'
+  require 'airbrake/metrics'
+end
 
 module Airbrake
   API_VERSION = "2.4"
@@ -113,6 +116,11 @@ module Airbrake
     def notify_or_ignore(exception, opts = {})
       notice = build_notice_for(exception, opts)
       send_notice(notice) unless notice.ignore?
+      save_exception(exception)
+    end
+
+    def save_exception(exception)
+      configuration.exceptions << exception 
     end
 
     def build_lookup_hash_for(exception, options = {})
