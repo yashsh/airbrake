@@ -27,6 +27,12 @@ module Airbrake
 
       begin
         status, headers, response = @app.call(env)
+
+        if headers['X-Cascade'] == 'pass'
+          @@request_counter += 1
+          @error_counter += 1
+        end
+
       rescue Exception => ex
         @error_counter += 1
         raise ex
