@@ -13,7 +13,7 @@ module Airbrake
     initializer "airbrake.middleware" do |app|
       app.config.middleware.use "Airbrake::Rails::Middleware"
       app.config.middleware.insert 0, "Airbrake::UserInformer"
-      app.config.middleware.use "Airbrake::Metrics"
+      app.config.middleware.insert_before "Airbrake::Rails::Middleware", "Airbrake::Metrics"
     end
 
     config.after_initialize do
@@ -45,9 +45,8 @@ module Airbrake
         Airbrake::Metrics.tap do |m|
 
           m.duration_of_requests += time
-          m.request_counter += 1
-          m.avg = 0 if m.avg.nil?
-          m.avg = m.duration_of_requests / m.request_counter
+          m.average_response_time ||= 0
+          m.average_response_time = m.duration_of_requests / m.all_requests.length
 
           m.min_response_time ||= time
           m.max_response_time ||= time
