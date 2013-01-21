@@ -2,7 +2,7 @@
 
 source "http://rubygems.org"
 
-gem "rails", "~> 3.0.17"
+gem "rack"
 gem "airbrake", :path=>"../"
 
 gemspec :path=>"../"

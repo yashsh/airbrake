@@ -31,6 +31,15 @@ That's it!
 
 The generator creates a file under `config/initializers/airbrake.rb` configuring Airbrake with your API key. This file should be checked into your version control system so that it is deployed to your staging and production environments.
 
+The default behaviour of the gem is to only operate in Rails environments that are NOT **development**, **test** & **cucumber**. 
+
+You can change this by altering this array:
+    
+    config.development_environments = ["development", "test", "cucumber", "custom"]
+    
+Set it to empty array and it will report errors on all environments.
+
+
 ### Rails 2.x
 
 Add the airbrake gem to your app. In config/environment.rb:
@@ -52,12 +61,10 @@ every server you deploy to has the gem installed or your application won't start
 
 The generator creates a file under `config/initializers/airbrake.rb` configuring Airbrake with your API key. This file should be checked into your version control system so that it is deployed to your staging and production environments.
 
-
-Supported Rails versions
+Supported frameworks
 ------------------------
 
-See **[SUPPORTED_RAILS_VERSIONS](https://github.com/airbrake/airbrake/blob/master/SUPPORTED_RAILS_VERSIONS)** for a list of official supported versions of
-Rails.
+See **[TESTED_AGAINST](https://github.com/airbrake/airbrake/blob/master/TESTED_AGAINST)** for a full list of frameworks and versions we test against.
 
 Airbrake wiki pages
 ------------------------
@@ -69,7 +76,18 @@ https://github.com/airbrake/airbrake/wiki
 Development
 -----------
 
-Use `bundle && rake` to run the tests.
+We use [Appraisals](https://github.com/thoughtbot/appraisal) to run the tests.
+
+To run the test suite on your machine, you need to run the following commands:
+
+    bundle
+    bundle exec rake appraisal:install
+
+After this, you're ready to run the suite with:
+
+    bundle exec rake
+
+This will include cucumber features we use to fully test the integration.
 
 Credits
 -------

@@ -6,7 +6,7 @@ end
 require 'net/http'
 require 'net/https'
 require 'rubygems'
-require 'airbrake/extensions/blank'
+require 'active_support/core_ext/object/blank'
 require 'airbrake/version'
 require 'airbrake/configuration'
 require 'airbrake/notice'
@@ -24,11 +24,6 @@ end
 module Airbrake
   API_VERSION = "2.4"
   LOG_PREFIX = "** [Airbrake] "
-
-  HEADERS = {
-    'Content-type'             => 'text/xml',
-    'Accept'                   => 'text/xml, application/xml'
-  }
 
   class << self
     # The sender object is responsible for delivering formatted data to the Airbrake server.
@@ -146,6 +141,7 @@ module Airbrake
       if configuration.public?
         if configuration.async?
           configuration.async.call(notice)
+          nil # make sure we never set env["airbrake.error_id"] for async notices
         else
           sender.send_to_airbrake(notice)
         end

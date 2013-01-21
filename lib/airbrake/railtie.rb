@@ -1,6 +1,8 @@
 require 'airbrake'
 require 'rails'
 
+require 'airbrake/rails/middleware'
+
 module Airbrake
   class Railtie < ::Rails::Railtie
     rake_tasks do
@@ -8,9 +10,9 @@ module Airbrake
       require 'airbrake/rails3_tasks'
     end
 
-    initializer "airbrake.use_rack_middleware" do |app|
+    initializer "airbrake.middleware" do |app|
+      app.config.middleware.use "Airbrake::Rails::Middleware"
       app.config.middleware.insert 0, "Airbrake::UserInformer"
-      app.config.middleware.insert_after "Airbrake::UserInformer","Airbrake::Rack"
       app.config.middleware.use "Airbrake::Metrics"
     end
 
@@ -25,24 +27,15 @@ module Airbrake
       ActiveSupport.on_load(:action_controller) do
         # Lazily load action_controller methods
         #
-        require 'airbrake/rails/javascript_notifier'
         require 'airbrake/rails/controller_methods'
 
-        include Airbrake::Rails::JavascriptNotifier
         include Airbrake::Rails::ControllerMethods
       end
 
-      if defined?(::ActionDispatch::DebugExceptions)
-        # We should catch the exceptions in ActionDispatch::DebugExceptions in Rails 3.2.x.
-        #
-        require 'airbrake/rails/middleware/exceptions_catcher'
-        ::ActionDispatch::DebugExceptions.send(:include,Airbrake::Rails::Middleware::ExceptionsCatcher)
-      elsif defined?(::ActionDispatch::ShowExceptions)
-        # ActionDispatch::DebugExceptions is not defined in Rails 3.0.x and 3.1.x so
-        # catch the exceptions in ShowExceptions.
-        #
-        require 'airbrake/rails/middleware/exceptions_catcher'
-        ::ActionDispatch::ShowExceptions.send(:include,Airbrake::Rails::Middleware::ExceptionsCatcher)
+      if defined?(::ActionController::Base)
+        require 'airbrake/rails/javascript_notifier'
+
+        ::ActionController::Base.send(:include, Airbrake::Rails::JavascriptNotifier)
       end
 
       ActiveSupport::Notifications.subscribe "process_action.action_controller" do |name, start, finish, id, payload|

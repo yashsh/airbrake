@@ -76,11 +76,15 @@ namespace :airbrake do
     end
 
     Rails.application.routes.draw do
-      match 'verify' => 'application#verify', :as => 'verify'
+      get 'verify' => 'application#verify', :as => 'verify'
     end
 
     puts 'Processing request.'
-    env = Rack::MockRequest.env_for("/verify")
+
+    config = Rails.application.config
+    protocol = (config.respond_to?(:force_ssl) && config.force_ssl) ? 'https' : 'http'
+
+    env = Rack::MockRequest.env_for("#{protocol}://www.example.com/verify")
 
     Rails.application.call(env)
 

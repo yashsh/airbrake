@@ -110,6 +110,9 @@ module Airbrake
     # Exceptions that are being captured
     attr_accessor :exceptions 
 
+    # Only used for JSON API
+    attr_accessor :project_id
+
     DEFAULT_PARAMS_FILTERS = %w(password password_confirmation).freeze
 
     DEFAULT_USER_ATTRIBUTES = %w(id name username email).freeze
@@ -137,6 +140,7 @@ module Airbrake
                       'ActionController::RoutingError',
                       'ActionController::InvalidAuthenticityToken',
                       'CGI::Session::CookieStore::TamperedWithCookie',
+                      'ActionController::UnknownHttpMethod',
                       'ActionController::UnknownAction',
                       'AbstractController::ActionNotFound',
                       'Mongoid::Errors::DocumentNotFound']

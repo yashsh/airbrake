@@ -13,8 +13,10 @@ end
 require './lib/airbrake/version'
 
 task :default do
-  exec 'rake appraisal test'
-  exec 'rake appraisal cucumber'
+  exec 'rake appraisal:rails-3.0 test '\
+  '&& rake appraisal:rails-3.1 test '\
+  '&& rake appraisal:rails-3.2 test '\
+  '&& rake appraisal cucumber'\
 end
 
 desc 'Test the airbrake gem.'
@@ -117,7 +119,28 @@ task :clobber => [:clobber_rdoc, :clobber_package]
 
 LOCAL_GEM_ROOT = File.join(GEM_ROOT, 'tmp', 'local_gems').freeze
 
+# Helper method that's used to only include relevant features when using
+# various gemfiles. We don't want to, for instance, test sinatra features when 
+# using the rails gemfile and vice versa.
+def cucumber_opts
+  opts = "--tags ~@wip --format progress "
+
+  opts << ENV["FEATURE"] and return if ENV["FEATURE"]
+
+  case ENV["BUNDLE_GEMFILE"]
+  when /rails/
+    opts << "features/rails.feature features/rails_with_js_notifier.feature features/metal.feature features/user_informer.feature"
+  when /rack/
+    opts << "features/rack.feature"
+  when /sinatra/
+    opts << "features/sinatra.feature"
+  when /rake/
+    opts << "features/rake.feature"
+  end
+end
+
 Cucumber::Rake::Task.new(:cucumber) do |t|
   t.fork = true
-  t.cucumber_opts = "--tags ~@wip --format progress"
+  t.cucumber_opts = cucumber_opts
 end
+

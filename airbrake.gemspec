@@ -14,6 +14,8 @@ Gem::Specification.new do |s|
   s.test_files    = Dir.glob("{test,spec,features}/**/*")
 
   s.add_runtime_dependency("builder")
+  s.add_runtime_dependency("activesupport")
+  s.add_runtime_dependency("json")
 
   s.add_development_dependency("bourne",        ">= 1.0")
   s.add_development_dependency("cucumber-rails","~> 1.1.1")
@@ -26,8 +28,8 @@ Gem::Specification.new do |s|
   s.add_development_dependency("aruba")
   s.add_development_dependency("appraisal")
   s.add_development_dependency("rspec-rails")
-  s.add_development_dependency("sinatra")
   s.add_development_dependency("girl_friday")
+  s.add_development_dependency("json-schema")
 
   s.authors = ["Airbrake"]
   s.email   = %q{support@airbrake.io}
