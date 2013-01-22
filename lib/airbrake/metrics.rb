@@ -18,6 +18,7 @@ module Airbrake
       # every hour send data to Airbrake
       if (Time.now - @@start_time) >= 3600
         Metrics.send_metrics
+        Metrics.reset!
       end
 
       time = Time.now.getutc.strftime("%Y-%m-%d at %H:%M UTC")
@@ -67,10 +68,13 @@ module Airbrake
       @@average_response_time           = nil
     end
 
-    def self.send_metrics
-      # TODO send hash to Airbrake
+    def self.reset!
       @@hash = {} 
       @@start_time = Time.now
+    end
+
+    def self.send_metrics
+      Airbrake.sender.send_metrics(@@hash)
     end
   end
 end

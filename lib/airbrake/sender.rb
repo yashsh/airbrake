@@ -2,7 +2,10 @@ module Airbrake
   # Sends out the notice to Airbrake
   class Sender
 
-    NOTICES_URI = '/notifier_api/v2/notices'.freeze
+    NOTICES_URI  = '/notifier_api/v2/notices'.freeze
+    JSON_API_URI = '/api/v3/projects'.freeze
+    METRICS_URI  = '/real/url/to/metrics'.freeze
+
     HEADERS = {
       :xml => {
       'Content-type' => 'text/xml',
@@ -12,7 +15,6 @@ module Airbrake
       'Accept'       => 'application/json'
     }}
 
-    JSON_API_URI = '/api/v3/projects'.freeze
     HTTP_ERRORS = [Timeout::Error,
                    Errno::EINVAL,
                    Errno::ECONNRESET,
@@ -83,6 +85,35 @@ module Airbrake
       nil
     end
 
+    def send_metrics(metrics)
+      http = setup_http_connection
+
+      data = metrics.to_json
+
+      response = begin
+                   http.post(metrics_url,
+                             data,
+                             HEADERS[:json])
+                 rescue *HTTP_ERRORS => e
+                   log :level => :error,
+                     :message => "Unable to contact the Airbrake server. HTTP Error=#{e}"
+                   nil
+                 end
+
+      case response
+      when Net::HTTPSuccess then
+        log :level => :info,
+          :message => "Success: #{response.class}",
+        :response => response
+      else
+        log :level => :error,
+          :message => "Failure: #{response.class}",
+        :response => response,
+          :notice => notice
+      end
+
+    end
+
     attr_reader :proxy_host,
                 :proxy_port,
                 :proxy_user,
@@ -131,8 +162,16 @@ module Airbrake
       end
     end
 
+    def metrics_url
+      base_url.merge(METRICS_URI)
+    end
+
+    def base_url
+      URI.parse("#{protocol}://#{host}:#{port}")
+    end
+
     def url
-      URI.parse("#{protocol}://#{host}:#{port}").merge(api_url)
+      base_url.merge(api_url)
     end
 
     def log(opts = {})

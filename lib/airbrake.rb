@@ -137,7 +137,12 @@ module Airbrake
 
     private
 
-    at_exit { Airbrake::Metrics.send_metrics if defined?(Airbrake::Metrics) }
+    at_exit do 
+      if defined?(Airbrake::Metrics)
+        Airbrake::Metrics.send_metrics
+        Airbrake::Metrics.reset!
+      end
+    end
 
     def send_notice(notice)
       if configuration.public?
