@@ -6,6 +6,7 @@ module Airbrake
 
     def initialize(app)
       @app                    = app
+      @start_time             = Time.now
       @@all_requests          = []
       @hash                   = {}
       @@duration_of_requests  = 0
@@ -14,7 +15,10 @@ module Airbrake
 
     def call(env)
 
-      # TODO: every hour send hash to Airbrake
+      # every hour send data to Airbrake
+      if (Time.now - @start_time) >= 3600
+        send_metrics
+      end
 
       time = Time.now.getutc.strftime("%Y-%m-%d at %H:%M UTC")
 
@@ -36,7 +40,7 @@ module Airbrake
         @exceptions = Airbrake.configuration.exceptions
 
         # TODO: track duration time separate for exceptions
-        
+
         @hash[time] = { "app_request_total_count" => @@all_requests.length,
                         "app_request_error_count" => @exceptions.length, 
                         "app_request_min_time"    => "#{@@min_response_time.to_i}[us]",
@@ -48,7 +52,7 @@ module Airbrake
 
       [status, headers.merge("Content-Type" => "text"), [body]]
       # [status, headers, response]
-      
+
     end
 
     def body 
@@ -63,5 +67,17 @@ module Airbrake
       @@min_response_time               = nil
       @@average_response_time           = nil
     end
+
+    def send_metrics
+      # TODO send hash to Airbrake
+      @hash = {} 
+      @start_time = Time.now
+    end
+
+    at_exit do
+     # I can't call this method inside this block
+     send_metrics
+    end
+
   end
 end
