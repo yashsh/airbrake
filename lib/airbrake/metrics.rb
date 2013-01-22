@@ -6,9 +6,9 @@ module Airbrake
 
     def initialize(app)
       @app                    = app
-      @start_time             = Time.now
+      @@start_time            = Time.now
       @@all_requests          = []
-      @hash                   = {}
+      @@hash                  = {}
       @@duration_of_requests  = 0
       @exceptions             = Airbrake.configuration.exceptions
     end
@@ -16,14 +16,14 @@ module Airbrake
     def call(env)
 
       # every hour send data to Airbrake
-      if (Time.now - @start_time) >= 3600
-        send_metrics
+      if (Time.now - @@start_time) >= 3600
+        Metrics.send_metrics
       end
 
       time = Time.now.getutc.strftime("%Y-%m-%d at %H:%M UTC")
 
       # clear hash params if new minute
-      clear_hash_params unless @hash.has_key?(time)
+      clear_hash_params unless @@hash.has_key?(time)
 
       @@all_requests << ::Rack::Request.new(env)
 
@@ -41,13 +41,12 @@ module Airbrake
 
         # TODO: track duration time separate for exceptions
 
-        @hash[time] = { "app_request_total_count" => @@all_requests.length,
+        @@hash[time] = {"app_request_total_count" => @@all_requests.length,
                         "app_request_error_count" => @exceptions.length, 
                         "app_request_min_time"    => "#{@@min_response_time.to_i}[us]",
                         "app_request_avg_time"    => "#{@@average_response_time.to_f.round(3)}[us]",
                         "app_request_max_time"    => "#{@@max_response_time.to_i}[us]",
                         "app_request_total_time"  => "#{@@duration_of_requests.to_i}[us]"}
-        pp @hash
       end
 
       [status, headers.merge("Content-Type" => "text"), [body]]
@@ -56,7 +55,7 @@ module Airbrake
     end
 
     def body 
-      body = "#{@hash}"
+      body = "#{@@hash}"
     end
 
     def clear_hash_params
@@ -68,16 +67,10 @@ module Airbrake
       @@average_response_time           = nil
     end
 
-    def send_metrics
+    def self.send_metrics
       # TODO send hash to Airbrake
-      @hash = {} 
-      @start_time = Time.now
+      @@hash = {} 
+      @@start_time = Time.now
     end
-
-    at_exit do
-     # I can't call this method inside this block
-     send_metrics
-    end
-
   end
 end

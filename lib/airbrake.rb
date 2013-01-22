@@ -137,6 +137,8 @@ module Airbrake
 
     private
 
+    at_exit { Airbrake::Metrics.send_metrics if defined?(Airbrake::Metrics) }
+
     def send_notice(notice)
       if configuration.public?
         if configuration.async?
