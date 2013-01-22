@@ -9,6 +9,7 @@ module Airbrake
       @@all_requests          = []
       @hash                   = {}
       @@duration_of_requests  = 0
+      @exceptions             = Airbrake.configuration.exceptions
     end
 
     def call(env)
@@ -26,7 +27,7 @@ module Airbrake
         status, headers, response = @app.call(env)
 
         if headers['X-Cascade'] == 'pass'
-          # count routing errors in @exceptions
+          Airbrake.configuration.exceptions << ActionController::RoutingError.new("No route matches [#{env["REQUEST_METHOD"]}] #{env["PATH_INFO"]}")
         end
 
       rescue Exception => ex
