@@ -1,4 +1,3 @@
-require 'pp'
 module Airbrake
   class Metrics
 
@@ -44,10 +43,10 @@ module Airbrake
 
         @@hash[time] = {"app_request_total_count" => @@all_requests.length,
                         "app_request_error_count" => @exceptions.length, 
-                        "app_request_min_time"    => "#{@@min_response_time.to_i}[us]",
-                        "app_request_avg_time"    => "#{@@average_response_time.to_f.round(3)}[us]",
-                        "app_request_max_time"    => "#{@@max_response_time.to_i}[us]",
-                        "app_request_total_time"  => "#{@@duration_of_requests.to_i}[us]"}
+                        "app_request_min_time"    => @@min_response_time.to_i,
+                        "app_request_avg_time"    => @@average_response_time.to_f.round(3),
+                        "app_request_max_time"    => @@max_response_time.to_i,
+                        "app_request_total_time"  => @@duration_of_requests.to_i}
       end
 
       [status, headers.merge("Content-Type" => "text"), [body]]
