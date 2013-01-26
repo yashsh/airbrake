@@ -1,70 +1,70 @@
 module Airbrake
   class Metrics
 
-    cattr_accessor :request_counter, :duration_of_requests, :min_response_time, :max_response_time, :average_response_time, :all_requests
+    cattr_accessor :request_counter, :duration_of_requests, :duration_of_requests_sq, :min_response_time, :max_response_time, :average_response_time, :count
 
     def initialize(app)
-      @app                    = app
-      @@start_time            = Time.now
-      @@all_requests          = []
-      @@hash                  = {}
-      @@duration_of_requests  = 0
-      @exceptions             = Airbrake.configuration.exceptions
+      @app                      = app
+      @@start_time              = Time.now
+      @@request_counter         = 0
+      @@hash                    = {}
+      @@duration_of_requests    = 0.0
+      @@duration_of_requests_sq = 0.0
+      @precision                = 60 #every minute
+      @@count                   = 0
     end
 
     def call(env)
 
       # every hour send data to Airbrake
-      if (Time.now - @@start_time) >= 3600
+      if (Time.now.min - @@start_time.min) >= 60
         Metrics.send_metrics
         Metrics.reset!
       end
 
-      time = Time.now.getutc.strftime("%Y-%m-%d at %H:%M UTC")
+      time = (Time.now.to_i/@precision*@precision) * 1000
 
       # clear hash params if new minute
       clear_hash_params unless @@hash.has_key?(time)
 
-      @@all_requests << ::Rack::Request.new(env)
+      @@request_counter += 1
 
       begin
-        status, headers, response = @app.call(env)
+        status, headers, body = @app.call(env)
 
         if headers['X-Cascade'] == 'pass'
-          Airbrake.configuration.exceptions << ActionController::RoutingError.new("No route matches [#{env["REQUEST_METHOD"]}] #{env["PATH_INFO"]}")
+           exceptions << ActionController::RoutingError.new("No route matches [#{env["REQUEST_METHOD"]}] #{env["PATH_INFO"]}")
         end
 
-      rescue Exception => ex
-        raise ex
       ensure
-        @exceptions = Airbrake.configuration.exceptions
 
-        # TODO: track duration time separate for exceptions
-
-        @@hash[time] = {"app_request_total_count" => @@all_requests.length,
-                        "app_request_error_count" => @exceptions.length, 
-                        "app_request_min_time"    => @@min_response_time.to_i,
-                        "app_request_avg_time"    => @@average_response_time.to_f.round(3),
-                        "app_request_max_time"    => @@max_response_time.to_i,
-                        "app_request_total_time"  => @@duration_of_requests.to_i}
+        @@hash[time] = {"duration"     => @precision * 1000,
+                        "requestCount" => @@request_counter,
+                        "errorCount"   => exceptions.length, 
+                        "latencySum"   => @@duration_of_requests.round(3),
+                        "latencySumsq" => @@duration_of_requests_sq.round(3),
+                        "latencyMin"   => @@min_response_time.to_f.round(3),
+                        "latencyAvg"   => @@average_response_time.to_f.round(3),
+                        "latencyMax"   => @@max_response_time.to_f.round(3)}
       end
 
-      [status, headers.merge("Content-Type" => "text"), [body]]
-      # [status, headers, response]
+      [status, headers, body]
 
     end
 
-    def body 
-      body = "#{@@hash}"
+    def exceptions
+      Airbrake.configuration.exceptions
     end
 
     def clear_hash_params
-      @@all_requests                    = []
+      @@request_counter                 = 0
       Airbrake.configuration.exceptions = []
-      @@duration_of_requests            = 0
-      @@max_response_time               = nil
+      @@duration_of_requests            = 0.0
+      @@duration_of_requests_sq         = 0.0
       @@min_response_time               = nil
       @@average_response_time           = nil
+      @@max_response_time               = nil
+      @@count                           = 0
     end
 
     def self.reset!
