@@ -1,5 +1,6 @@
 require 'airbrake'
 require 'rails'
+require 'pp'
 
 require 'airbrake/rails/middleware'
 
@@ -40,25 +41,34 @@ module Airbrake
 
       ActiveSupport::Notifications.subscribe "process_action.action_controller" do |name, start, finish, id, payload|
 
-        time = (finish - start) * 1000000 #in micro seconds
+        unless payload[:exception]
 
-        Airbrake::Metrics.tap do |m|
+          #TODO: count time when serving asset! Requests are counting but times don't!
 
-          m.duration_of_requests += time
-          m.average_response_time ||= 0
-          m.average_response_time = m.duration_of_requests / m.all_requests.length
+          time = (finish - start) * 1000 # [ms]
 
-          m.min_response_time ||= time
-          m.max_response_time ||= time
+          Airbrake::Metrics.tap do |m|
 
-          if time < m.min_response_time
-            m.min_response_time = time
+            m.count += 1
+            m.duration_of_requests     += time
+            m.duration_of_requests_sq  += time*time
+            m.average_response_time   ||= 0
+            m.average_response_time     = m.duration_of_requests / m.count
+
+            m.min_response_time ||= time
+            m.max_response_time ||= time
+
+            if time < m.min_response_time
+              m.min_response_time = time
+            end
+
+            if time > m.max_response_time
+              m.max_response_time = time
+            end
           end
 
-          if time > m.max_response_time
-            m.max_response_time = time
-          end
         end
+
       end
     end
   end
