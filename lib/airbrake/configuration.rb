@@ -1,5 +1,7 @@
 module Airbrake
   # Used to set up and modify settings for the notifier.
+  
+  #modified by yash 12/14/13 to point host to extinguisher.com instead
   class Configuration
 
     OPTIONS = [:api_key, :js_api_key, :backtrace_filters, :development_environments,
@@ -161,7 +163,7 @@ module Airbrake
       @js_api_key               = nil
       @secure                   = false
       @use_system_ssl_cert_chain= false
-      @host                     = 'api.airbrake.io'
+      @host                     = 'extinguisherapp.com'  #changed yash 12/14/13 - for SW 2013
       @port                     = nil
       @http_open_timeout        = 2
       @http_read_timeout        = 5
@@ -173,9 +175,9 @@ module Airbrake
       @ignore_user_agent        = []
       @development_environments = %w(development test cucumber)
       @development_lookup       = true
-      @notifier_name            = 'Airbrake Notifier'
+      @notifier_name            = 'Extinguisher Notifier' #changed yash 12/14/13
       @notifier_version         = VERSION
-      @notifier_url             = 'https://github.com/airbrake/airbrake'
+      @notifier_url             = 'https://github.com/yashsh/airbrake'
       @framework                = 'Standalone'
       @user_information         = 'Airbrake Error {{error_id}}'
       @rescue_rake_exceptions   = nil

@@ -1,7 +1,13 @@
 module Airbrake
   # Sends out the notice to Airbrake
+  #modified yash 12/14/13 to send to Extinguisher app for SW 2013 
+  #uses proto buf to post binary file to server
   class Sender
 
+    #added yash - tells sender to use protobuf format - must be used in 
+    #conjunction with send_to_airbrake_in_protobuf method
+    attr_accessor :use_protobuf
+    
     NOTICES_URI = '/notifier_api/v2/notices'.freeze
     HEADERS = {
       :xml => {
@@ -10,7 +16,15 @@ module Airbrake
     },:json => {
       'Content-Type' => 'application/json',
       'Accept'       => 'application/json'
-    }}
+    },
+      :protobuf => 
+      {
+        'Content-Type' => 'application/octet-stream',
+        'Accept'       => 'application/octet-stream, application/x-google-protobuf'
+      }
+    }
+    
+    PROTOBUF_URI = '/notification'.freeze #added for posting binary data
 
     JSON_API_URI = '/api/v3/projects'.freeze
     HTTP_ERRORS = [Timeout::Error,
@@ -40,6 +54,8 @@ module Airbrake
       ].each do |option|
         instance_variable_set("@#{option}", options[option])
       end
+      
+      @use_protobuf = false
     end
 
 
@@ -53,6 +69,48 @@ module Airbrake
       response = begin
                    http.post(url.respond_to?(:path) ? url.path : url,
                              data,
+                             headers)
+                 rescue *HTTP_ERRORS => e
+                   log :level => :error,
+                       :message => "Unable to contact the Airbrake server. HTTP Error=#{e}"
+                   nil
+                 end
+
+      case response
+      when Net::HTTPSuccess then
+        log :level => :info,
+            :message => "Success: #{response.class}",
+            :response => response
+      else
+        log :level => :error,
+            :message => "Failure: #{response.class}",
+            :response => response,
+            :notice => notice
+      end
+
+      if response && response.respond_to?(:body)
+        error_id = response.body.match(%r{<id[^>]*>(.*?)</id>})
+        error_id[1] if error_id
+      end
+    rescue => e
+      log :level => :error,
+        :message => "[Airbrake::Sender#send_to_airbrake] Cannot send notification. Error: #{e.class}" +
+        " - #{e.message}\nBacktrace:\n#{e.backtrace.join("\n\t")}"
+
+      nil
+    end
+
+    # Sends the notice data in binary format off to Extinguisher for processing.
+    #
+    # @param [Notice] notice The notice to be sent off in protobuf binary format
+    def send_to_airbrake_in_protobuf(notice)
+      @use_protobuf = true
+      #data = prepare_notice(notice) #not needed now
+      http = setup_http_connection
+
+      response = begin
+                   http.post(url.respond_to?(:path) ? url.path : url,
+                             notice,
                              headers)
                  rescue *HTTP_ERRORS => e
                    log :level => :error,
@@ -117,6 +175,9 @@ module Airbrake
     end
 
     def api_url
+      if @use_protobuf
+        return PROTOBUF_URI
+      end
       if json_api_enabled?
         "#{JSON_API_URI}/#{project_id}/notices?key=#{api_key}"
       else
@@ -125,6 +186,9 @@ module Airbrake
     end
 
     def headers
+      if @use_protobuf
+        return HEADERS[:protobuf]
+      end
       if json_api_enabled?
         HEADERS[:json]
       else
