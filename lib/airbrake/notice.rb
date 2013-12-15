@@ -246,7 +246,7 @@ module Airbrake
       n = Airbrake::Notification.new
       e = Airbrake::Error.new
       s = Airbrake::Error::StackTrace.new
-      l1 = Airbrake::Error::StackTrace::Line.new
+     
 
       # Notification
       n.api_key = "myapikey"
@@ -258,22 +258,25 @@ module Airbrake
       
       # Line
       backtrace.lines.map do |line|
+        l1 = Airbrake::Error::StackTrace::Line.new
         l1.file = line.file
         l1.number = line.number.to_i
         l1.method = line.method_name
+        s.lines << l1
       end
       ########################################
       # Appending Starts here
       ########################################
 
       # Append lines to stacktrace
-      s.lines << l1
+      
 
       # Add newly formed stacktrace instance to error
       e.stacktrace = s
 
       # Add all the above to notification
       n.error = e
+      
       
       # Serialize and write ... yay!
       File.open('noti.message','wb') do |f|
