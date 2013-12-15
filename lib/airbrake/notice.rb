@@ -1,5 +1,6 @@
 require 'builder'
 require 'socket'
+require File.expand_path('./notification.rb', __FILE__)
 module Airbrake
   class Notice
 
@@ -274,8 +275,10 @@ module Airbrake
       # Add all the above to notification
       n.error = e
       
-      # return new generated notification
+      logger.info "Return final notification ====> #{n}"
+      # Return final notification
       return n
+      
     end
 
     # Determines if this notice should be ignored
