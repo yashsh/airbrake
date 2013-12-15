@@ -256,13 +256,12 @@ module Airbrake
       # Error
       e.classname = error_class
       e.title = error_message
-      
+
       ########################################
       # Appending Starts here
       ########################################
 
       # Append lines to stacktrace
-      # Line
       backtrace.lines.map do |line|
         l1 = Airbrake::Error::StackTrace::Line.new
         l1.file = line.file
@@ -292,6 +291,10 @@ module Airbrake
       req.sent_over_ssl = false
       req.content_length = 0
       req.query_string = parameters.to_s unless parameters.empty?
+      
+      # Add controller and action
+      req.rails_data.controller_name = controller
+      req.rails_data.controller_action = action
 
       # Add newly formed stacktrace instance to error
       e.stacktrace = s
@@ -300,6 +303,8 @@ module Airbrake
       n.error = e
       
       # Serialize and write ... yay!
+      
+      # Write to file ... yay!
       File.open('noti.message','wb') do |f|
         f.write n
       end
