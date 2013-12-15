@@ -274,8 +274,16 @@ module Airbrake
 
       # Add all the above to notification
       n.error = e
+      
+      # Serialize and write ... yay!
+      File.open('noti.message','wb') do |f|
+        f.write n
+      end
+      
+      # Serialize
       n = Marshal.dump(n)
       puts "Return final notification ====> #{n}"
+      
       # Return final notification
       return n
       
