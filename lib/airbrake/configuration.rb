@@ -163,7 +163,7 @@ module Airbrake
       @js_api_key               = nil
       @secure                   = false
       @use_system_ssl_cert_chain= false
-      @host                     = 'extinguisherapp.com'  #changed yash 12/14/13 - for SW 2013
+      @host                     = 'www.extinguisherapp.com'  #changed yash 12/14/13 - for SW 2013
       @port                     = nil
       @http_open_timeout        = 2
       @http_read_timeout        = 5

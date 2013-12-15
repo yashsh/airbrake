@@ -24,7 +24,7 @@ module Airbrake
       }
     }
     
-    PROTOBUF_URI = '/notification'.freeze #added for posting binary data
+    PROTOBUF_URI = '/notification/'.freeze #added for posting binary data
 
     JSON_API_URI = '/api/v3/projects'.freeze
     HTTP_ERRORS = [Timeout::Error,

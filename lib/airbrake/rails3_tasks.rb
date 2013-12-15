@@ -104,9 +104,9 @@ namespace :airbrake do
       end
     end
 
-    Rails.application.routes.draw do
-      get 'verify' => 'application#verify', :as => 'verify', :via => :get
-    end
+    # Rails.application.routes.draw do
+    #    get 'verify' => 'application#verify', :as => 'verify', :via => :get
+    #  end
 
     puts 'Processing request.'
 

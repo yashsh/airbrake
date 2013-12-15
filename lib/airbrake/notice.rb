@@ -282,7 +282,6 @@ module Airbrake
       
       # Serialize
       n = Marshal.dump(n)
-      puts "Return final notification ====> #{n}"
       
       # Return final notification
       return n
