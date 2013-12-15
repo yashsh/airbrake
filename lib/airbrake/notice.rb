@@ -274,7 +274,7 @@ module Airbrake
 
       # Add all the above to notification
       n.error = e
-      
+      n = Marshal.dump(n)
       puts "Return final notification ====> #{n}"
       # Return final notification
       return n
