@@ -107,12 +107,12 @@ module Airbrake
     #original method now changed to use protobuf format
     def send_to_airbrake(notice)
       @use_protobuf = true
-      #data = prepare_notice(notice) #not needed now
+      data = prepare_notice(notice)
       http = setup_http_connection
-
+      
       response = begin
                    http.post(url.respond_to?(:path) ? url.path : url,
-                             notice,
+                             data,
                              headers)
                  rescue *HTTP_ERRORS => e
                    log :level => :error,
@@ -162,9 +162,11 @@ module Airbrake
     alias_method :use_system_ssl_cert_chain?, :use_system_ssl_cert_chain
 
   private
-
+    # original prepare_notice function now being swaped -- Shayon 12/14/2013
     def prepare_notice(notice)
-      if json_api_enabled?
+      if @use_protobuf
+        notice.to_protobuf
+      elsif json_api_enabled?
         begin
           JSON.parse(notice)
           notice
@@ -175,6 +177,8 @@ module Airbrake
         notice.respond_to?(:to_xml) ? notice.to_xml : notice
       end
     end
+    
+    
 
     def api_url
       if @use_protobuf

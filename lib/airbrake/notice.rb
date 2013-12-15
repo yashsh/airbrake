@@ -1,6 +1,5 @@
 require 'builder'
 require 'socket'
-
 module Airbrake
   class Notice
 
@@ -240,6 +239,43 @@ module Airbrake
           hash['params']      = parameters   unless parameters.empty?
           hash['session']     = session_data unless session_data.empty?
       end.to_json
+    end
+    
+    def to_protobuf
+      n = Airbrake::Notification.new
+      e = Airbrake::Error.new
+      s = Airbrake::Error::StackTrace.new
+      l1 = Airbrake::Error::StackTrace::Line.new
+
+      # Notification
+      n.api_key = "myapikey"
+      n.version = Airbrake::VERSION
+
+      # Error
+      e.classname = error_class
+      e.title = error_message
+      
+      # Line
+      backtrace.lines.map do |line|
+        l1.file = line.file
+        l1.number = line.number.to_i
+        l1.method = line.method_name
+      end
+      ########################################
+      # Appending Starts here
+      ########################################
+
+      # Append lines to stacktrace
+      s.lines << l1
+
+      # Add newly formed stacktrace instance to error
+      e.stacktrace = s
+
+      # Add all the above to notification
+      n.error = e
+      
+      # return new generated notification
+      return n
     end
 
     # Determines if this notice should be ignored
