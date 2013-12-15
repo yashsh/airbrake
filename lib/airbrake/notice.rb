@@ -250,7 +250,7 @@ module Airbrake
 
       # Notification
       n.api_key = "myapikey"
-      n.version = Airbrake::VERSION
+      n.version = 0
 
       # Error
       e.classname = error_class
