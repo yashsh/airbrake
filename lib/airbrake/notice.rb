@@ -283,7 +283,7 @@ module Airbrake
       req = n.request
       req.full_url = url
       req.protocol = "http"
-      req.hostname = "www.example.com"
+      req.hostname = hostname
       req.port = 80
       req.path = "/notification/"
       req.request_method = 0 #GET request
