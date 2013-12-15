@@ -275,7 +275,7 @@ module Airbrake
       # Add all the above to notification
       n.error = e
       
-      logger.info "Return final notification ====> #{n}"
+      puts "Return final notification ====> #{n}"
       # Return final notification
       return n
       
