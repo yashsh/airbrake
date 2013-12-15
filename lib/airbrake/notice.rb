@@ -246,8 +246,9 @@ module Airbrake
       n = Airbrake::Notification.new
       e = Airbrake::Error.new
       s = Airbrake::Error::StackTrace.new
+      req = Airbrake::Request.new
+      svr = Airbrake::ServerConfig.new
      
-
       # Notification
       n.api_key = "myapikey"
       n.version = 0
@@ -256,6 +257,11 @@ module Airbrake
       e.classname = error_class
       e.title = error_message
       
+      ########################################
+      # Appending Starts here
+      ########################################
+
+      # Append lines to stacktrace
       # Line
       backtrace.lines.map do |line|
         l1 = Airbrake::Error::StackTrace::Line.new
@@ -264,19 +270,34 @@ module Airbrake
         l1.method = line.method_name
         s.lines << l1
       end
-      ########################################
-      # Appending Starts here
-      ########################################
 
-      # Append lines to stacktrace
-      
+      #Server
+      svr = n.server_config
+      svr.hostname = hostname
+      svr.ipaddress = "127.0.0.1"
+      svr.language = "ruby"
+      svr.framework = "Rails: " || Rails::VERSION::STRING
+      svr.project_src_dir = File.dirname(project_root)
+      svr.environment = environment_name
+
+      #Request
+      req = n.request
+      req.full_url = url
+      req.protocol = "http"
+      req.hostname = "www.example.com"
+      req.port = 80
+      req.path = "/notification/"
+      req.request_method = 0 #GET request
+      req.mime_type = "[html/text]"
+      req.sent_over_ssl = false
+      req.content_length = 0
+      req.query_string = parameters.to_s unless parameters.empty?
 
       # Add newly formed stacktrace instance to error
       e.stacktrace = s
 
       # Add all the above to notification
       n.error = e
-      
       
       # Serialize and write ... yay!
       File.open('noti.message','wb') do |f|
