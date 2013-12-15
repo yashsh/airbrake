@@ -1,6 +1,6 @@
 require 'builder'
 require 'socket'
-require File.expand_path('./notification.rb', __FILE__)
+require File.expand_path('../notification.rb', __FILE__)
 module Airbrake
   class Notice
 
