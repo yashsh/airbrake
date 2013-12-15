@@ -37,6 +37,6 @@ Gem::Specification.new do |s|
   s.authors = ["Airbrake"]
   s.email   = %q{support@airbrake.io}
   s.homepage = "http://www.airbrake.io"
-
+  s.add_development_dependency("ruby-protocol-buffers")
   s.platform = Gem::Platform::RUBY
 end
