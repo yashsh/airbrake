@@ -62,7 +62,8 @@ module Airbrake
     # Sends the notice data off to Airbrake for processing.
     #
     # @param [Notice or String] notice The notice to be sent off
-    def send_to_airbrake(notice)
+    #changed yash 12/14/13 - this is the original send_to_airbrake method now renamed
+    def send_to_airbrake_in_xmljson(notice)
       data = prepare_notice(notice)
       http = setup_http_connection
 
@@ -103,7 +104,8 @@ module Airbrake
     # Sends the notice data in binary format off to Extinguisher for processing.
     #
     # @param [Notice] notice The notice to be sent off in protobuf binary format
-    def send_to_airbrake_in_protobuf(notice)
+    #original method now changed to use protobuf format
+    def send_to_airbrake(notice)
       @use_protobuf = true
       #data = prepare_notice(notice) #not needed now
       http = setup_http_connection
@@ -255,7 +257,8 @@ module Airbrake
       File.expand_path(File.join("..", "..", "..", "resources", "notice.xml"), __FILE__)
     end
 
-    def send_to_airbrake(notice)
+    #renamed original method - yash
+    def send_to_airbrake_in_xmljson(notice)
       data = prepare_notice(notice)
 
       notices_file = File.open(last_notice_path, "w") do |file|
@@ -266,5 +269,20 @@ module Airbrake
     ensure
       notices_file.close if notices_file
     end
+
+    #original method now changed to use protobuf method - yash
+    def send_to_airbrake(notice)
+      #data = prepare_notice(notice)
+      data = notice
+
+      notices_file = File.open(last_notice_path, "w") do |file|
+        file.puts data
+      end
+
+      super(notice)
+    ensure
+      notices_file.close if notices_file
+    end
+
   end
 end
